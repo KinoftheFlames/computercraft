@@ -1,0 +1,113 @@
+--SUPER simple farming script specifically for my farm
+--not a lot of error handling/self-maitenance
+
+os.loadAPI("hare")
+turtle.select(1)
+hare.netprint("Initiating...")
+
+function farmBlock()
+    turtle.digDown()
+    --place down seeds
+	if turtle.getItemCount(1) > 1 then
+		turtle.placeDown() end
+end
+
+--assumes start above closest left block of closest left field
+function farmLine()
+    farmBlock()
+    hare.forward()
+    farmBlock()
+    hare.forward()
+    farmBlock()
+    hare.forward()
+    farmBlock()
+    hare.forward()
+    farmBlock()
+end
+function farmMiddleLine()
+    farmBlock()
+    hare.forward()
+    farmBlock()
+    hare.forward()
+    hare.forward()
+    farmBlock()
+    hare.forward()
+    farmBlock()
+end
+
+function farmPlot()
+    farmLine()
+    hare.turnRight()
+    hare.forward()
+    hare.turnRight()
+
+    farmLine()
+    hare.turnLeft()
+    hare.forward()
+    hare.turnLeft()
+
+    farmMiddleLine()
+    hare.turnRight()
+    hare.forward()
+    hare.turnRight()
+
+    farmLine()
+    hare.turnLeft()
+    hare.forward()
+    hare.turnLeft()
+
+    farmLine()
+    hare.turnLeft()
+    hare.qm("ffff")
+    hare.turnLeft()
+    hare.qm("ffff")
+    hare.turnAround()
+end
+
+function farmAll()
+	hare.netprint("Farming plot: 1")
+    farmPlot()
+    hare.qm("ffffff")
+	hare.netprint("Farming plot: 2")
+    farmPlot()
+    hare.qm("ffffff")
+	hare.netprint("Farming plot: 3")
+    farmPlot()
+    hare.qm("rffffffl")
+	hare.netprint("Farming plot: 4")
+    farmPlot()
+    hare.qm("bbbbbb")
+	hare.netprint("Farming plot: 5")
+    farmPlot()
+    hare.qm("bbbbbb")
+	hare.netprint("Farming plot: 6")
+    farmPlot()
+    hare.qm("rffffffl")
+	hare.netprint("Farming plot: 7")
+    farmPlot()
+    hare.qm("ffffff")
+	hare.netprint("Farming plot: 8")
+    farmPlot()
+    hare.qm("ffffff")
+	hare.netprint("Farming plot: 9")
+    farmPlot()
+    
+    --return home
+    hare.qm("lffffffffffffrbbbbbbbbbbbb")
+end
+
+farmAll()
+
+--[[
+
+function farmPlot()
+    for i=1,5 do
+   	 for j=1,5 do
+   		 if i ~= 3 and j ~= 3 then --dont farm the water/lily
+   			 --move
+   			 farmBlock()
+   		 end
+   	 end
+    end
+end
+--]]

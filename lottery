@@ -1,0 +1,42 @@
+--lottery
+--by KinoftheFlames
+
+os.pullEvent = os.pullEventRaw --443, lottery
+os.loadAPI("var")
+USER_PATH = "lottery/users/"
+
+tUsers = {} --entry is {name="name", pass="pass", bank=0, entries=0}
+
+function loadUsers()
+	if #fs.list(USER_PATH) == 0 then return {} end --if no users, return empty table
+	for i,myName in ipairs(fs.list(USER_PATH)) do --for each user, load name
+		table.insert(tUsers, {
+			name	= myName,
+			pass 	= var.get(USER_PATH .. myName, "pass"),
+			bank 	= var.get(USER_PATH .. myName, "bank"),
+			entries = var.get(USER_PATH .. myName, "entries")
+			})
+	end
+end
+
+function addUser(sName, sPass)
+	--add user to loaded memory
+	table.insert(tUsers, {name = sName, pass = sPass, bank = 0, entries = 0})
+	
+	--add user to HD
+	--sets up file variables under /var/lottery/username
+	var.set(USER_PATH .. sName, "pass", pass)
+	var.set(USER_PATH .. sName, "bank", 0)
+	var.set(USER_PATH .. sName, "entries", 0)
+end
+
+function removeUser(sName)
+	--remove user from loaded memory
+	for i,user in tUsers do
+		if user.name == sName then
+			table.remove(tUsers, i) end
+	end
+	
+	--remove user from HD
+	var.remove(USER_PATH .. sName)
+end

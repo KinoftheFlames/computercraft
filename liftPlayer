@@ -1,0 +1,34 @@
+os.pullEvent = os.pullEventRaw
+os.loadAPI("hare")
+
+local delay = .1
+
+--lift
+function lift()
+	local easyMove = 0
+	while not turtle.detectUp() and easyMove < 3 do --run while no block above and player in the way (infinte move up)
+		if turtle.up() then
+			easyMove = easyMove + 1
+		else
+			easyMove = 0
+			while not turtle.up() do --runs until successful move (single move up)
+				os.startTimer(delay)
+				local e, p1 = os.pullEvent()
+				if e == "key" and p1 == 57 then
+					turtle.down()
+					print("Moving down as requested.")
+				end
+			end
+		end
+	end
+end
+
+--descend
+function descend()
+	while not turtle.detectDown() do
+		while not turtle.down() do end
+	end
+end
+
+lift()
+descend()

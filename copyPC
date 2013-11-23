@@ -1,0 +1,32 @@
+--copyPC
+--by KinoftheFlames
+--makes a copy of the PCs root directory on the disk
+
+--create directory on disk if nonexistant
+print("Creating directory...")
+if not fs.exists("disk/copies") then
+	fs.makeDir("disk/copies")
+	file = fs.open("disk/copies/count", "w")
+	file.write("0")
+	file.close()
+end
+
+--creates the directory for this pc
+file = fs.open("disk/copies/count", "r")
+dir = tostring(tonumber(file.readAll())+1)
+file.close()
+file = fs.open("disk/copies/count", "w")
+file.write(dir)
+file.close()
+fs.makeDir("disk/copies/"..dir)
+
+--copies files to the directory
+print("Copying files...")
+files = fs.list("/")
+for i,file in ipairs(files) do
+	if file ~= "rom" and file ~= "disk" then
+		fs.copy(file, "disk/copies/"..dir.."/"..file)
+	end
+end
+
+print("Done!")

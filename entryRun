@@ -1,0 +1,32 @@
+os.pullEvent = os.pullEventRaw
+os.loadAPI("hare")
+
+--[[
+arg = { ... }
+if #arg >= 2 then
+	local tEnd = { x=arg[1], y=arg[2] }
+end
+local tHome = {x=801, y=117}
+]]
+
+hare.left()
+for i=1,99 do
+	while not hare.forward() do end
+end
+turtle.turnLeft()
+for i=1,12 do
+	while not hare.forward() do end
+end
+
+rs.setOutput("right", true)
+os.sleep(5)
+
+hare.turnAround()
+for i=1,12 do
+	while not hare.forward() do end
+end
+turtle.turnRight()
+for i=1,99 do
+	while not hare.forward() do end
+end
+hare.qm("lfl")

@@ -1,0 +1,9 @@
+arg = { ... }
+if #arg >= 1 then
+	local path = arg[1]
+	fs.open(path.."/uploadedFiles", "w")
+	
+	for i,file in ipairs(#fs.list(path)) do --for each file
+		
+	end
+else print("No path provided.") end

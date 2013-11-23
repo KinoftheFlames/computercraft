@@ -1,0 +1,15 @@
+os.pullEvent = os.pullEventRaw
+os.loadAPI("hare")
+
+for i=1,7 do
+	while not hare.forward() do end
+end
+
+rs.setOutput("left", true)
+os.sleep(5)
+
+hare.turnAround()
+for i=1,7 do
+	while not hare.forward() do end
+end
+os.reboot()

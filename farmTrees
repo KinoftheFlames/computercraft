@@ -1,0 +1,224 @@
+--farmTrees
+--by KinoftheFlames
+--REQUIRED APIS: hare
+
+--place chest to left of turtle with bones
+--place chest above turtle with saplings (spruce recommended)
+--place chest below turtle to collect wood
+--place dirt in front of and below turtle to plant upon
+--REQUIRES A 7x7 AREA (to collect saplings)
+
+local arg = { ... }
+
+os.loadAPI("hare")
+
+local PLACE_HOLDER = 14 --slot 14 = temporary holding space
+local BONEMEAL = 15 --slot 15 = bonemeal
+local SAPLINGS = 16 --slot 16 = saplings
+local PICKUPS = 1 --slot 1 = pickups
+local CUTS_BEFORE_COLLECT = 0 --numbers of trees felled before collecting saplings
+
+local gatherCounter = 0
+local treeCounter = 0
+local radius = 4 --number of blocks collection area extends in one direction. doesn't count tree block
+
+if #arg > 0 and tonumber(arg[1]) >= 1 and tonumber(arg[1]) <= 4 then
+	radius = tonumber(arg[1])
+elseif #arg == 0 then
+	radius = 1
+end
+
+
+--scans defined area on ground for saplings, also checks on top of chests
+function collectSaplings()
+	print("Collecting saplings on ground...")
+	gatherCounter = 0
+	turtle.select(SAPLINGS)
+	
+	--3x3
+	hare.qm("rSlSf".."lSaSlSf".."lSaSrfS")
+	hare.digMoveUp()
+	hare.digMoveUp()
+	hare.qm("GSdrGSf".."lGSlf".."ldb")
+	
+	if radius > 1 then
+		hare.qm("ff")
+		--middle 5x5
+		hare.qm("SflSfSf")
+		for h=1,3 do --sucks up outer lines
+			turtle.turnLeft()
+			for i=1,4 do
+				turtle.suck()
+				hare.forward()
+			end
+		end
+		hare.qm("lSr") --facing treeward direction, at forward right corner of middle "circle"
+		
+		if radius > 2 then
+			--outer 7x7
+			hare.qm("SfrSf")
+			for h=1,4 do --sucks up outer lines
+				turtle.turnRight()
+				for i=1,6 do
+					turtle.suck()
+					hare.forward()
+				end
+			end
+			--at 3rd out of 4th front/right corner facing "right" side direction
+			
+			if radius > 3 then
+				--outmost 9x9
+				hare.qm("SflSf")
+				
+				for h=1,4 do --sucks up outmost lines
+					turtle.turnLeft()
+					for i=1,8 do
+						turtle.suck()
+						hare.forward()
+					end
+				end
+				--at farthest front/right corner facing "forward"	
+				hare.qm("lffffrbbbbb") --at home
+			else
+				hare.qm("bbblbbbb") end
+		else
+			hare.qm("lffrbbb") end
+	end
+end
+
+--pickup saplings from chest
+function getSaplings()
+	print("Getting saplings from chest...")
+	
+	--getting saplings
+	local count = turtle.getItemCount(SAPLINGS)
+	turtle.select(SAPLINGS)
+	turtle.dropUp()
+	turtle.suckUp()
+	
+	if turtle.getItemCount(SAPLINGS) == count then --if just dropped one and picked it back up
+		turtle.select(SAPLINGS) --drop 1
+		turtle.dropUp()
+		turtle.select(PLACE_HOLDER) --pickup 1 in dummy
+		turtle.suckUp()
+		turtle.select(SAPLINGS) --pickup stack
+		turtle.suckUp()
+		turtle.select(PLACE_HOLDER) --drop dummy
+		turtle.dropUp()
+		
+		if turtle.getItemCount(SAPLINGS) == 0 then
+			turtle.select(SAPLINGS)
+			turtle.suckUp()
+		end
+	end
+	
+	--if still no saplings, gather and check chest until have some
+	if turtle.getItemCount(SAPLINGS) <= 1 then
+		collectSaplings()
+	end
+	
+	return true
+end
+
+--pickup bonemeal from chest
+function getBonemeal()
+	print("Retrieving bonemeal...")
+	
+	--getting bonemeal
+	turtle.turnLeft()
+	local count = turtle.getItemCount(BONEMEAL)
+	turtle.select(BONEMEAL) --drop 1
+	turtle.drop()
+	turtle.suck()
+	
+	if turtle.getItemCount(BONEMEAL) == count then --if just dropped one and picked it back up
+		turtle.select(BONEMEAL) --drop 1
+		turtle.drop()
+		turtle.select(PLACE_HOLDER) --pickup 1 in dummy
+		turtle.suck()
+		turtle.select(BONEMEAL) --pickup stack
+		turtle.suck()
+		turtle.select(PLACE_HOLDER) --drop dummy
+		turtle.drop()
+		
+		if turtle.getItemCount(BONEMEAL) == 0 then
+			turtle.select(BONEMEAL)
+			turtle.suck()
+		end
+	end
+	
+	if turtle.getItemCount(BONEMEAL) <= 1 then
+		print("Out of bonemeal! Waiting on bonemeal...")
+	end
+	
+	turtle.turnRight()
+	return true
+end
+
+--drops off all non-essentials
+function dump()
+	for i=1,16 do
+		if i ~= SAPLINGS and i~= BONEMEAL then
+			turtle.select(i)
+			if turtle.compareTo(SAPLINGS) then
+				turtle.dropUp()
+			else
+				turtle.dropDown() end
+		end
+	end
+end
+
+--chop down a tree
+function chopTree()
+	treeCounter = treeCounter + 1
+	print("Chopping tree #"..treeCounter.."...")
+	gatherCounter = gatherCounter + 1
+	turtle.select(PICKUPS)
+	if not turtle.dig() then
+		print("[HIGH]Expected tree, but nothing there!")
+		return false
+	end
+	hare.forward()
+	hare.digMoveUp()
+	hare.qm("GSlGSaGSl") --destroy non-chest blocks on 2nd level
+	while turtle.digUp() do
+		hare.up()
+		if turtle.detect() then --only attempt destorying leaves if there are any
+			hare.qm("GSlGSlGSlGSl") end --destroy surrounding leaves, will need to upgrade if not sustaining
+	end
+	while hare.down() do end
+	hare.back()
+	dump()
+	return true
+end
+
+print("Now farming wood...")
+while true do
+	--collect saplings every X tree cuts, if not done sooner
+	if gatherCounter >= CUTS_BEFORE_COLLECT and CUTS_BEFORE_COLLECT ~= 0 then
+		print("Forcing sapling collection.")
+		collectSaplings()
+	end
+	
+	--make sure turtle has bonemeal
+	if turtle.getItemCount(BONEMEAL) <= 1 then
+		getBonemeal() end
+	
+	--make sure turtle has saplings
+	if turtle.getItemCount(SAPLINGS) <= 1 then
+		getSaplings() end
+	
+	--place sapling / use bonemeal / chop tree
+	if turtle.getItemCount(SAPLINGS) > 1 and turtle.getItemCount(BONEMEAL) > 1 then
+		turtle.select(SAPLINGS)
+		turtle.place()
+		local bonemealCount = turtle.getItemCount(BONEMEAL)
+		turtle.select(BONEMEAL)
+		turtle.place()
+		if turtle.getItemCount(BONEMEAL) == bonemealCount then
+			print("Bonemeal unsuccessful.")
+			turtle.dig()
+		else
+			chopTree() end
+	end
+end

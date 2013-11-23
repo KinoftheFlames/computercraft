@@ -1,0 +1,24 @@
+--3Dprinter
+arg = { ... }
+if #arg == 1 and arg[1] == "scan" then
+	mode = arg[1]
+elseif #arg == 4 and arg[1] == "print" and arg[2] ~= nil and arg[3] ~= nil and arg[4] ~= nil then
+	mode = arg[1]
+	length = tonumber(arg[2])
+	width = tonumber(arg[3])
+	height = tonumber(arg[4])
+else
+	print("Syntax: 3Dprinter<scan|print, [length, width, height]>")
+	return false
+end
+
+function scan()
+	
+end
+
+function printer()
+
+end
+
+if mode == "scan" then scan()
+elseif mode == "print" then printer() end

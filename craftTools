@@ -1,0 +1,131 @@
+--take sticks from above
+--take diamonds from below
+--craft diamond pick
+--drop diamnod pick/shovel ahead
+
+
+function getItem(slot, side)
+	turtle.select(slot)
+	if side == "up" then
+		turtle.suckUp()
+	elseif side == "down" then
+		turtle.suckDown()
+	elseif side == "front" then
+		turtle.suc() end
+		
+	if turtle.getItemCount(slot) == 0 then
+		print("Waiting on item...")
+		if side == "up" then
+			while not turtle.suckUp() do end
+		elseif side == "down" then
+			while not turtle.suckDown() do end
+		elseif side == "front" then
+			while not turtle.suck() do end end
+		print("Item received.")
+	end
+end
+
+
+
+
+--SHOVELS--
+function craftShovels()
+	--get sticks
+	getItem(6, "up")
+	getItem(10, "up")
+
+	--get diamonds
+	getItem(2, "down")
+
+	--craft
+	turtle.select(16)
+	while turtle.craft() do
+		if not turtle.drop() then --if drop chest is full, end program
+			print("Drop chest full.")
+			return false
+		end
+	end
+
+	turtle.select(6)
+	turtle.dropUp()
+	turtle.select(10)
+	turtle.dropUp()
+
+	turtle.select(2)
+	turtle.dropDown()
+	return true
+end
+
+
+--PICKS--
+function craftPicks()
+	--get sticks
+	getItem(6, "up")
+	getItem(10, "up")
+
+	--get diamonds
+	getItem(1, "down")
+	getItem(2, "down")
+	getItem(3, "down")
+
+	--craft
+	turtle.select(16)
+	while turtle.craft() do
+		if not turtle.drop() then --if drop chest is full, end program
+			print("Drop chest full.")
+			return false
+		end
+	end
+
+	turtle.select(6)
+	turtle.dropUp()
+	turtle.select(10)
+	turtle.dropUp()
+
+	turtle.select(1)
+	turtle.dropDown()
+	turtle.select(2)
+	turtle.dropDown()
+	turtle.select(3)
+	turtle.dropDown()
+	return true
+end
+
+--ARMOR--
+function craftArmor()
+	--get diamonds
+	getItem(1, "down")
+	getItem(3, "down")
+	getItem(5, "down")
+	getItem(6, "down")
+	getItem(7, "down")
+	getItem(9, "down")
+	getItem(10, "down")
+	getItem(11, "down")
+
+	--craft
+	turtle.select(16)
+	while turtle.craft() do
+		if not turtle.drop() then --if drop chest is full, end program
+			print("Drop chest full.")
+			while not turtle.drop() do end
+		end
+	end
+
+	--[[
+	turtle.select(1)
+	turtle.dropDown()
+	turtle.select(2)
+	turtle.dropDown()
+	turtle.select(3)
+	turtle.dropDown()
+	]]--
+	return true
+end
+
+
+turtle.select(16)
+turtle.drop()
+while true do
+	craftArmor()
+end

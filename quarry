@@ -1,0 +1,371 @@
+--quarry
+--by KinoftheFlames
+--REQUIRES following APIs: hare
+--ATM assumes fuel is unlimited
+
+--digs a cube by provided paramaters
+--from its starting orientation, length is forward, and width is to the right, STARTING BLOCK INCLUDED
+--moves down at start, so doesn't dig the plane it starts on
+
+os.loadAPI("hare")
+
+
+
+--PROGRAM ARGUMENTS
+arg = { ... }
+if #arg ~= 3 and #arg ~= 4 then
+	print("Syntax: quarry<length, width, height, [only|exclude]>")
+	return false end
+
+--filter setup
+if #arg == 4 then
+	--asures filter value is valid
+	if arg[4] ~= "only" and arg[4] ~= "exclude" then
+		print("Syntax: quarry<length, width, height, [only|exclude]>")
+		return false end
+	
+	hare.netprint("Preparing filter...")
+	filterOn = true
+	filterType = tostring(arg[4])
+	filter = {} --will contain a list of slots that have filter seed items
+	
+	--create a filter of each unique block in the turtle's inventory
+	for curSlot=1,16 do
+		turtle.select(curSlot)
+		if #filter == 0 and turtle.getItemCount(curSlot) > 0 then
+			table.insert(filter, curSlot) end --adds current slot to the filter list
+		match = false
+		for j, slot in ipairs(filter) do
+			if turtle.compareTo(slot) then --if the current slot's unique block is not registered in the filter yet and its not empty
+				match = true
+				break
+			end
+		end
+		if not match and turtle.getItemCount(curSlot) > 0 then --if unique and not empty
+			table.insert(filter, curSlot) end --adds current slot to the filter list
+	end
+	turtle.select(1)
+	
+	if #filter ~= 0 then
+		io.write("Filter ("..filterType.."): ")
+		for i,slot in ipairs(filter) do
+			io.write(slot.." ")
+		end
+		io.write("\n")
+	end
+else filterOn = false end
+
+
+
+
+
+--VARIABLES
+FACE = {forward=0, right=1, back=2, left=3} --position // x, y, z (length, width, height)
+
+length = tonumber(arg[1])
+width = tonumber(arg[2])
+height = tonumber(arg[3])
+
+--position and direction relative to start
+pos = {x=0, y=0, z=0} --position // x, y, z (length, width, height)
+dir = 0 --direction // 0 = forward, 1 = right, 2 = back, 3 = left // SO turnLeft = -1, turnRight = +1 // (dir % 4 gives accurate numbers)
+lastTurnRight = false
+
+
+
+
+
+
+
+
+--FUNCTIONS
+
+
+--checks if inventory is full
+--valid nextDig: forward down up [none]
+function inventoryFull(nextDig)
+	--seperated for speed (turtle.select() is slow)
+	for i=1,16 do
+		if turtle.getItemCount(i) == 0 then --if empty slot
+			return false end
+	end
+	for curSlot=1,16 do
+		turtle.select(curSlot)
+		
+		--if next block to dig is the same as the current slot, and the slot is not full
+		if (nextDig == "forward" and turtle.compare() and turtle.getItemSpace(curSlot) > 0)
+			or (nextDig == "up" and turtle.compareUp() and turtle.getItemSpace(curSlot) > 0)
+			or (nextDig == "down" and turtle.compareDown() and turtle.getItemSpace(curSlot) > 0)
+		then
+			turtle.select(1)
+			return false end
+	end
+	hare.netprint("Inventory full.")
+	turtle.select(1)
+	return true
+end
+
+--change direction
+function direct(newDir)
+	while newDir ~= dir % 4 do --while incorrect directions
+		if newDir > dir % 4 then --turn right if it's quicker
+			if newDir == FACE.left and dir % 4 == FACE.forward then
+				turtle.turnLeft()
+				dir = dir - 1
+			else
+				turtle.turnRight()
+				dir = dir + 1
+			end
+		elseif newDir < dir % 4 then --else turn left
+			if newDir == FACE.forward and dir % 4 == FACE.left then
+				turtle.turnRight()
+				dir = dir + 1
+			else
+				turtle.turnLeft()
+				dir = dir - 1
+			end
+		end
+	end
+end
+
+function moveTo(x, y, z)
+	if pos.x == x and pos.y == y and pos.z == z then return end
+	hare.netprint("Moving from ("..pos.x..","..pos.y..","..pos.z..") to ("..x..","..y..","..z..")")
+	
+	--moves up once or down once as needed before continuing to prevent hitting potential
+	--		blocks in the unmined spaces
+	if pos.z < z and pos.z ~= z - 1 then --move up
+		if hare.digMoveUp() then
+			pos.z = pos.z + 1 end
+	elseif pos.z > z and pos.z ~= z + 1 then --move down
+		if hare.digMoveDown() then
+			pos.z = pos.z - 1 end
+	end
+	
+	--left/right
+	if pos.y > y then
+		direct(FACE.left)
+		while pos.y > y do --move left
+			if hare.digMove() then
+				pos.y = pos.y - 1 end
+		end
+	elseif pos.y < y then
+		direct(FACE.right)
+		while pos.y < y do --move right
+			if hare.digMove() then
+				pos.y = pos.y + 1 end
+		end
+	end
+	
+	--forward/back
+	if pos.x > x then
+		direct(FACE.back)
+		while pos.x > x do --move back
+			if hare.digMove() then
+				pos.x = pos.x - 1 end
+		end
+	elseif pos.x < x then
+		direct(FACE.forward)
+		while pos.x < x do --move back
+			if hare.digMove() then
+				pos.x = pos.x + 1 end
+		end
+	end
+	
+	--up/down
+	while pos.z < z do --move up
+		if hare.digMoveUp() then
+			pos.z = pos.z + 1 end
+	end
+	while pos.z > z do --move down
+		if hare.digMoveDown() then
+			pos.z = pos.z - 1 end
+	end
+	
+	hare.netprint("Arrived at ("..x..","..y..","..z..")")
+end
+
+--removes items from inventory based on filter, returns true if items were discarded
+--discarding is command turtle.dropDown()
+function filterInventory()
+	hare.netprint("Discarding innapropriate items...")
+	discarded = false
+	for curSlot=1,16 do
+		turtle.select(curSlot)
+		
+		--determine if match in filter
+		match = false
+		for j, slot in ipairs(filter) do
+			if turtle.compareTo(slot) then --if curent slot matches a filter item
+				match = true
+				matchSlot = j
+				break
+			end
+		end
+		
+		if filterType == "only" and not match then --if it matches the filter, keep it
+			turtle.dropDown()
+			discarded = true
+		elseif filterType == "exclude" and match then --if it matches the filter, drop it
+			if matchSlot ~= curSlot then --drop all if not the seed slot
+				turtle.dropDown()
+				discarded = true
+			else --otherwise drop all but 1
+				turtle.dropDown(turtle.getItemCount(curSlot)-1) end
+		end
+	end
+	
+	turtle.select(1)
+	if discarded then return true end
+	return false
+end
+
+--unloads inventory (presumed to be home)
+function unload(alreadyFiltered)
+	if not alreadyFiltered and filterOn then
+		filterInventory() end
+	
+	hare.netprint("Unloading inventory...")
+	turtle.turnLeft()
+	dir = dir - 1
+	for curSlot=1,16 do
+		turtle.select(curSlot)
+		if filterOn then --if filter is on, don't drop seed items
+			match = false
+			for j, slot in ipairs(filter) do
+				if curSlot == slot then
+					match = true
+					turtle.drop(turtle.getItemCount(curSlot)-1) --drop all but 1
+					break
+				end
+			end
+			if not match then --if not a seed item, drop all
+				turtle.drop() end
+		else turtle.drop() end --if no filter
+	end
+	turtle.select(1)
+	turtle.turnRight()
+	dir = dir + 1
+end
+
+--return to startls
+
+function returnHome()
+	hare.netprint("Returning home...")
+	moveTo(0,0,0)
+	direct(FACE.forward)
+end
+
+--drops off inventory at chest 1 left of home
+function goUnload()
+	hare.netprint("Making unload trip...")
+	
+	--if filter on, dump appropriate items and reevaluate unload run
+	if filterOn and filterInventory() then
+		hare.netprint("Inventory no longer full. Cancelling trip.")
+		return end
+	
+	digPos = {x=pos.x, y=pos.y, z=pos.z}
+	digDir = dir % 4
+	
+	returnHome()
+	unload(true)
+	
+	hare.netprint("Returning to work...")
+	moveTo(digPos.x, digPos.y, digPos.z)
+	direct(digDir)
+end
+
+
+--movements
+function down()
+	if inventoryFull("down") then
+		goUnload() end
+	if hare.digMoveDown() then
+		pos.z = pos.z - 1
+	else
+		return false end
+	return true
+end
+
+function forward()
+	if inventoryFull("forward") then
+		goUnload() end
+	if hare.digMove() then
+		if dir % 4 == FACE.forward then
+			pos.x = pos.x + 1
+		else
+			pos.x = pos.x - 1 end
+	else
+		return false end
+	return true
+end
+
+function forwardRow()
+	if inventoryFull("forward") then
+		goUnload() end
+	if hare.digMove() then
+		if dir % 4 == FACE.right then
+			pos.y = pos.y + 1
+		else
+			pos.y = pos.y - 1 end
+	else
+		return false end
+	return true
+end
+
+function turnLeft()
+	turtle.turnLeft()
+	dir = dir - 1
+end
+
+function turnRight()
+	turtle.turnRight()
+	dir = dir + 1
+end
+
+--dig!
+function quarry(startLength, startWidth, startHeight)
+	--actual digging
+	hare.netprint("Digging quarry ["..length.."x"..width.."x"..height.."]...")
+	i = startHeight
+	while i <= height do --cube
+		if not down() then return end
+		
+		j = startWidth
+		while j <= width do --plane
+			k = startLength
+			while k <= length - 1 do --row
+				if not forward() then return end
+				k = k + 1
+			end
+			if j < width then --only start new row if needed
+				if lastTurnRight then --turn left
+					turnLeft()
+					if not forwardRow() then return end
+					turnLeft()
+					lastTurnRight = false
+				else --turn right
+					turnRight()
+					if not forwardRow() then return end
+					turnRight()
+					lastTurnRight = true
+				end
+			end
+			j = j + 1
+		end
+		if i < height and (width > 1 or length > 1) then --only turn around if needed
+			hare.turnAround()
+			dir = dir + 2
+		end
+		i = i + 1
+	end
+	hare.netprint("Quarry complete.")
+end
+
+--check all possible situations and resume from there
+quarry(1, 1, 1)
+returnHome()
+unload(false)
+hare.netprint("Program complete.")
+return true

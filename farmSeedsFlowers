@@ -1,0 +1,36 @@
+--place chest in front of turtle with bones
+--place chest above turtle to collect grass/flowers
+--place GRASS block two spaces below turtle
+
+--could be faster by waiting for inventory of turtle to fill before dropping
+
+--slot 1 = bonemeal
+--slot 2 = pickups
+
+function craftBonemeal()
+	print("Crafting bonemeal...")
+	turtle.select(1)
+	turtle.suck()
+	if turtle.getItemCount(1) == 0 then
+		print("Out of bones. Waiting on bones...")
+		while not turtle.suck() do	end
+	end
+	if turtle.getItemCount(1) > 21 then
+		turtle.drop(turtle.getItemCount(1)-21) --assures not to craft more than 63 bonemeal (messses up slots)
+	end
+	turtle.craft()
+	return true
+end
+
+print("Now farming seeds/flowers...")
+while true do
+	turtle.select(1)
+	turtle.placeDown()
+	
+	if turtle.getItemCount(1) == 0 then
+		craftBonemeal() end
+	
+	turtle.digDown()
+	turtle.select(2)
+	turtle.dropUp()
+end

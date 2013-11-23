@@ -1,0 +1,8 @@
+shell.run("clear")
+rednet.open("right")
+
+print("Receiving...")
+while true do
+  x,y,z = rednet.receive()
+  print("["..x.."] "..y)
+end

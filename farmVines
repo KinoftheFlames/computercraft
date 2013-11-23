@@ -1,0 +1,22 @@
+--doesn't work.... turtles can't use item-specific attack
+print("Now farming vines...")
+while true do
+	if turtle.detectUp() then
+		select(1)
+		print("Collecting vines...")
+		level = 0
+		while turtle.attackUp() do
+			turtle.up()
+			level = level + 1
+		end
+		turtle.down()
+		turtle.select(2)
+		turtle.placeUp()
+		for i=0,level-1 do
+			turtle.down() end
+		turtle.turnRight()
+		turtle.drop()
+		turtle.turnLeft()
+		print("Vines collected.")
+	end
+end

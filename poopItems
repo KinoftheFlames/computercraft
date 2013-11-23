@@ -1,0 +1,9 @@
+while true do --keeps the program alive
+  while rs.getInput("front") do --while on trapswitch
+    rs.setOutput("back", true)
+    os.sleep(0)
+    rs.setOutput("back", false)
+    os.sleep(0.3)
+  end
+  os.sleep(0)
+end

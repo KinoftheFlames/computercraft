@@ -1,0 +1,265 @@
+--hare
+--by KinoftheFlames
+
+pre = "[hare]"
+
+--move: move safely (no entity in way, no block in way, has fuel)
+--returns false if out of fuel or way is blocked, else returns true
+function forward()
+	if not hasFuel() then return false end
+	if turtle.forward() then return true end
+	if turtle.detect() then
+		print(pre.."Block in path (forward).")
+		return false end
+	
+	--if not moved, and no block in path, entity must be in path
+	print(pre.."Entity in path; attacking (forward).")
+	for i=1,20 do
+		turtle.attack()
+		os.sleep(1)
+		if turtle.forward() then break end
+		if turtle.detect() then --probably gravel/sand
+			print(pre.."Block in path (forward).")
+			return false end
+		if i == 20 then
+			print(pre.."Could not resolve obstacle.")
+			return false
+		end
+	end
+	print(pre.."Entity resolved, continuing.")
+	return true
+end
+function back()
+	if not hasFuel() then return false end
+	if turtle.back() then return true end
+	turnAround()
+	if turtle.detect() then
+		print(pre.."Block in path (back).")
+		turnAround()
+		return false end
+	
+	--if not moved, and no block in path, entity must be in path
+	print(pre.."Entity in path; attacking (back).")
+	for i=1,20 do
+		turtle.attack()
+		os.sleep(1)
+		if turtle.forward() then break end
+		if turtle.detect() then --probably gravel/sand
+			print(pre.."Block in path (back).")
+			return false end
+		if i == 20 then
+			print(pre.."Could not resolve obstacle.")
+			turnAround()
+			return false
+		end
+	end
+	print(pre.."Entity resolved, continuing.")
+	turnAround()
+	return true
+end
+function down()
+	if not hasFuel() then return false end
+	if turtle.down() then return true end
+	if turtle.detectDown() then
+		print(pre.."Block in path (down).")
+		return false end
+	
+	--if not moved, and no block in path, entity must be in path
+	print(pre.."Entity in path; attacking (down).")
+	for i=1,20 do
+		turtle.attackDown()
+		os.sleep(1)
+		if turtle.down() then break end
+		if turtle.detectDown() then --block placed?
+			print(pre.."Block in path (down).")
+			return false end
+		if i == 20 then
+			print(pre.."Could not resolve obstacle.")
+			return false
+		end
+	end
+	print(pre.."Entity resolved, continuing.")
+	return true
+end
+function up()
+	if not hasFuel() then return false end
+	if turtle.up() then return true end
+	if turtle.detectUp() then
+		print(pre.."Block in path (up).")
+		return false end
+	
+	--if not moved, and no block in path, entity must be in path
+	print(pre.."Entity in path; attacking (up).")
+	for i=1,20 do
+		turtle.attackUp()
+		os.sleep(1)
+		if turtle.up() then break end
+		if turtle.detectUp() then --probably gravel/sand
+			print(pre.."Block in path (up).")
+			return false end
+		if i == 20 then
+			print(pre.."Could not resolve obstacle.")
+			return false
+		end
+	end
+	print(pre.."Entity resolved, continuing.")
+	return true
+end
+
+--left/right: turn, move, turn back
+function left()
+	turtle.turnLeft()
+	value = forward()
+	turtle.turnRight()
+	return value
+end
+function right()
+	turtle.turnRight()
+	value = forward()
+	turtle.turnLeft()
+	return value
+end
+
+--redundancy
+function turnRight()
+	return turtle.turnRight()
+end
+function turnLeft()
+	return turtle.turnLeft()
+end
+
+function hasFuel()
+	if turtle.getFuelLevel() == 0 then
+		print(pre.."Out of fuel.")
+		return false
+	end
+	return true
+end
+
+--digMove: digs, then moves when available
+--returns success boolean of movement
+function digMove()
+	minedBlock = turtle.dig()
+	moved = forward()
+	if minedBlock and not moved then
+		os.sleep(1)
+		while minedBlock and not moved do --while gravel/sand in the way and unable to move
+			minedBlock = turtle.dig()
+			os.sleep(1)
+			moved = forward()
+		end
+		return true
+	end
+	return moved
+end
+function digMoveForward() digMove() end --referal
+function digMoveUp()
+	minedBlock = turtle.digUp()
+	moved = up()
+	if minedBlock and not moved then
+		os.sleep(1)
+		while minedBlock and not moved do --while gravel/sand in the way and unable to move
+			minedBlock = turtle.digUp()
+			os.sleep(1)
+			moved = up()
+		end
+		return true
+	end
+	return moved
+end
+function digMoveDown()
+	turtle.digDown()
+	return down()
+end
+function digMoveLeft()
+	turtle.turnLeft()
+	value = digMove()
+	turtle.turnRight()
+	return value
+end
+function digMoveRight()
+	turtle.turnRight()
+	value = digMove()
+	turtle.turnLeft()
+	return value
+end
+
+--turn around/backwards/180
+function turnAround()
+	turtle.turnRight()
+	turtle.turnRight()
+end
+
+--takes a string of chars and translates it to movement
+--i.e. scriptMove(udfblrLRA) is up down forward back turnLeft turnRight left right turnAround
+--lower case for basic movements, upper case for macros and actions
+function quickMove(script)
+	for i=1,#script do
+		char = script.sub(script, i, i)
+		if char == "f" then
+			hare.forward()
+		elseif char == "b" then
+			hare.back()
+		elseif char == "u" then
+			hare.up()
+		elseif char == "d" then
+			hare.down()
+		elseif char == "l" then
+			turtle.turnLeft()
+		elseif char == "r" then
+			turtle.turnRight()
+		elseif char == "L" then
+			hare.left()
+		elseif char == "R" then
+			hare.right()
+		elseif char == "a" then
+			turnAround()
+		elseif char == "A" then --DEPRECATED
+			turnAround()
+		elseif char == "D" then
+			turtle.drop()
+		elseif char == "S" then
+			turtle.suck()
+		elseif char == "G" then
+			turtle.dig()
+		elseif char == "P" then
+			turtle.place()
+		end
+	end
+end
+function qm(script) quickMove(script) end
+function quickDigMove(script)
+	for i=1,#script do
+		char = script.sub(script, i, i)
+		if char == "f" then
+			hare.digMove()
+		elseif char == "b" then
+			hare.turnAround()
+			hare.digMove()
+			hare.turnAround()
+		elseif char == "u" then
+			hare.digMoveUp()
+		elseif char == "d" then
+			hare.digMoveDown()
+		elseif char == "l" then
+			turtle.turnLeft()
+		elseif char == "r" then
+			turtle.turnRight()
+		elseif char == "L" then
+			hare.digMoveLeft()
+		elseif char == "R" then
+			hare.digMoveRight()
+		elseif char == "A" then
+			turnAround()
+		end
+	end
+end
+function qdm(script) quickDigMove(script) end
+
+
+--maybe should move to diff API
+function netprint(text)
+	rednet.open("right")
+	print(pre..text)
+	rednet.broadcast(pre..text)
+end

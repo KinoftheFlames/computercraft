@@ -1,0 +1,26 @@
+os.pullEvent = os.pullEventRaw
+os.loadAPI("hare")
+
+hare.qm("Lf") --set at home pos, same facing
+turtle.turnLeft()
+for i=1,27 do
+	while not hare.forward() do end
+end
+turtle.turnRight()
+for i=1,35 do
+	while not hare.forward() do end
+end
+
+rs.setOutput("left", true)
+os.sleep(5)
+
+hare.turnAround()
+for i=1,35 do
+	while not hare.forward() do end
+end
+turtle.turnLeft()
+for i=1,27 do
+	while not hare.forward() do end
+end
+turtle.turnLeft()
+hare.qm("bR") --move from home pos, assuming same facing

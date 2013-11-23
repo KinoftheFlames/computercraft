@@ -1,0 +1,15 @@
+--farmCactusReed
+--by KinoftheFlames
+
+--place chest above turtle and cactus/reed two spaces below turtle
+--don't forget to add water by the reed and to leave room adjacent to the cactus
+print("Farming cactus/reed...")
+while true do
+	if turtle.digDown() then
+		print("Cactus/reed chopped.")
+		if not turtle.dropUp() then
+			print("Chest full.")
+		end
+	end
+	os.sleep(0)
+end

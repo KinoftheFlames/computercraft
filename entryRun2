@@ -1,0 +1,25 @@
+os.pullEvent = os.pullEventRaw
+os.loadAPI("hare")
+
+hare.left()
+for i=1,28 do
+	while not hare.forward() do end
+end
+turtle.turnLeft()
+for i=1,8 do
+	while not hare.forward() do end
+end
+
+os.sleep(5)
+shell.run("liftPlayer")
+
+hare.turnAround()
+for i=1,8 do
+  hare.forward()
+end
+turtle.turnRight()
+for i=1,28 do
+  hare.forward()
+end
+hare.qm("lfl")
+os.shutdown()

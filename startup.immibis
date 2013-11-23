@@ -1,0 +1,3 @@
+file = fs.open("_ftppasswd", "w")
+file.write("epic")
+file.close()

@@ -1,0 +1,63 @@
+--var
+--by KinoftheFlames
+--stores variables in file system for later use
+dir = "vars"
+
+function isPath(prog, var)
+	return fs.exists(dir) and fs.exists(dir.."/"..prog) and fs.exists(dir.."/"..prog.."/"..var)
+end
+
+function addPath(prog)
+	fs.makeDir(dir)
+	fs.makeDir(dir.."/"..prog)
+end
+
+function set(prog, var, value)
+	if not isPath(prog, var) then
+		addPath(prog) end
+	file = fs.open(dir.."/"..prog.."/"..var, "w")
+	file.write(value)
+	file.close()
+end
+
+--returns value of variable if any, otherwise returns empty string
+function get(prog, var)
+	if not isPath(prog, var) then
+		return "" end
+	file = fs.open(dir.."/"..prog.."/"..var, "r")
+	value = file.readAll()
+	file.close()
+	return value
+end
+
+--[[
+function setDir(prog, var)
+	if not isPath(prog, var) then
+		addPath(prog) end
+	fs.makeDir(prog.."/"..var)
+end
+]]--
+
+--returns true if the variable exists, otherwise false
+function exists(prog, var)
+	if not isPath(prog, var) then
+		return false
+	else
+		return true
+	end
+end
+
+function remove(prog, var)
+	if var == nil then
+		fs.delete(dir.."/"..prog)
+	else
+		fs.delete(dir.."/"..prog.."/"..var)
+		if #fs.list(dir.."/"..prog) == 0 then
+			fs.delete(dir.."/"..prog) end
+	end
+	
+	if #fs.list(dir) == 0 then
+		fs.delete(dir) end
+end
+function delete(prog, var) remove(prog,var) end
+function del(prog, var) remove(prog,var) end --DEPRECATED
